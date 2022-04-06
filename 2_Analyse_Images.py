@@ -27,18 +27,7 @@ def create_lookup_dataframe(images, outdf):
         # Handily, PIL has a count colours function builtin! 
         # Warning, using .convert('RGB') to RGB will mean it confuses black with transparent
         colors = img.getcolors()
-        '''
-        # if first item ; construct dataframe
-        if i == 1:
-            colnames = [str(x[1]) for x in colors]
-            # add image index 
-            colnames.insert(0, 'Image')
-            colourinfo_df = pd.DataFrame(columns=colnames)
-            del colnames
-
-        # append image index
-        colourinfo_df.append({'Image':i}, ignore_index=True)
-        '''
+        
         row = [i]
         # Get data as list from colors. comes as (count, (r,g,b))
         data = [str(x[0]) for x in colors]
