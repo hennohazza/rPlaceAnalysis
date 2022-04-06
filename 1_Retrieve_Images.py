@@ -17,6 +17,8 @@ reqs = requests.get(url)
 soup = BeautifulSoup(reqs.text, 'html.parser')
 
 # extracts all links on the page (in this case all the images + '../')
+# download_dir is location of images. 
+download_dir = '/rPlace/Ims/'
 for i, link in enumerate(soup.find_all('a')):
     # first link is '../' so skip this
     if i==0:
@@ -27,5 +29,5 @@ for i, link in enumerate(soup.find_all('a')):
             print(link.get('href'))
 
             img_data = requests.get(url+link.get('href')).content
-            with open('/rPlace/Ims/'+link.get('href'), 'wb') as handler:
+            with open(download_dir+link.get('href'), 'wb') as handler:
                 handler.write(img_data)
