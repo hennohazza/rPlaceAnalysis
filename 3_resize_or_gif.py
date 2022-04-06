@@ -16,7 +16,7 @@ df = pd.read_csv('image_colour_data.csv')
 filenames = df['image_name'].values.tolist()
 graph_ims = []
 for f in filenames:
-    find_file = '/Graph_Ims/'+str(f)+'_mpl.png'
+    find_file = './Graph_Ims/'+str(f)+'_mpl.png'
     if os.path.exists(find_file):
         graph_ims.append(find_file)
     del find_file
@@ -40,11 +40,9 @@ num_cores = 4
 Parallel(n_jobs=num_cores)(delayed(resize_image)(i) for i in graph_ims)
 
 
-
-
 resized_graph_ims = []
 for f in filenames:
-    find_file = '/Graph_Ims_Resized/'+str(f)+'_mpl.png'
+    find_file = './Graph_Ims_Resized/'+str(f)+'_mpl.png'
     if os.path.exists(find_file):
         resized_graph_ims.append(find_file)
     del find_file

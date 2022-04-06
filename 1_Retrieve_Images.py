@@ -18,15 +18,15 @@ soup = BeautifulSoup(reqs.text, 'html.parser')
 
 # extracts all links on the page (in this case all the images + '../')
 # download_dir is location of images. 
-download_dir = '/rPlace/Ims/'
+download_dir = 'Ims/'
 for i, link in enumerate(soup.find_all('a')):
     # first link is '../' so skip this
     if i==0:
         pass
     else:
         # found this process times out, so skip the ones downloaded!
-        if not os.path.exists('/rPlace/Ims/'+link.get('href')):
-            print(link.get('href'))
+        if not os.path.exists(download_dir+link.get('href')):
+            print('retrieving image ', link.get('href'))
 
             img_data = requests.get(url+link.get('href')).content
             with open(download_dir+link.get('href'), 'wb') as handler:

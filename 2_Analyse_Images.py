@@ -4,7 +4,7 @@ Script to analyse r/place images.
 Basic process is to iterate through images and open as arrays. 
 This allows oppertunity for lots of analysis options! I went with colour percentage, but can be anything you want. 
 
-Required packages ; Pillow, Matplotlib, Pandas
+Required packages ; Pillow, Matplotlib, Pandas, colormap, joblib (for parallel processing)
 '''
 
 #import packages
@@ -18,6 +18,7 @@ from joblib import Parallel, delayed
 
 # Create a lookup dataframe of image colour info. Saves opening an image each time.
 def create_lookup_dataframe(images, outdf):
+    colourinfo_df = pd.DataFrame()
     for i, im in enumerate(images):
         print('Getting Image data for {}/{}'.format(i+1,len(images)))
         i = i+1
@@ -26,7 +27,7 @@ def create_lookup_dataframe(images, outdf):
         # Handily, PIL has a count colours function builtin! 
         # Warning, using .convert('RGB') to RGB will mean it confuses black with transparent
         colors = img.getcolors()
-
+        '''
         # if first item ; construct dataframe
         if i == 1:
             colnames = [str(x[1]) for x in colors]
@@ -37,15 +38,17 @@ def create_lookup_dataframe(images, outdf):
 
         # append image index
         colourinfo_df.append({'Image':i}, ignore_index=True)
-        
+        '''
         row = [i]
         # Get data as list from colors. comes as (count, (r,g,b))
         data = [str(x[0]) for x in colors]
         # Insert Image index as first item
-        data.insert(0,os.path.basename(im)[:-4])
+        data.insert(0,i)
+        data.insert(1,os.path.basename(im)[:-4])
         colnames = [str(x[1]) for x in colors]
         # insert column name
-        colnames.insert(0,'image_name')
+        colnames.insert(0,'im_idx')
+        colnames.insert(1,'image_name')
         # write out
         newrow = pd.DataFrame([data], columns=colnames)
         colourinfo_df = colourinfo_df.append(newrow)
@@ -54,10 +57,11 @@ def create_lookup_dataframe(images, outdf):
     # fill empty cells with 0
     colourinfo_df = colourinfo_df.fillna(0)
     # write out
-    colourinfo_df.to_csv(outdf)
+    colourinfo_df.to_csv(outdf, index=False)
  
 # Script to create graphic output. Output Dir is '/Graph_Ims/'
-def CreateGraphic(inIm):
+def CreateGraphic(refcsv, inIm):
+    df = pd.read_csv(refcsv)
     # Get basename of image
     basename = os.path.basename(inIm)[:-4]
     print('Processing {}'.format(basename))
@@ -65,9 +69,9 @@ def CreateGraphic(inIm):
     # match basename to dataframe to extract image data
     rowdata = df.loc[df['image_name'] == int(basename)]
     # Get row index
-    image_n = rowdata['Image'].values[0]
+    image_n = rowdata['im_idx'].values[0]
     # now drop unecessary cols. (0, 0, 0, 0) is the transparent pixels
-    rowdata = rowdata.drop(columns=['image_name', 'Image', '(0, 0, 0, 0)'])
+    rowdata = rowdata.drop(columns=['im_idx', 'image_name', '(0, 0, 0, 0)'])
     # Get hex names (easier for matplotlib / I was going to label them but thought against it)
     hexnames = []
     for i in rowdata.columns.values.flatten().tolist():
@@ -101,16 +105,17 @@ def CreateGraphic(inIm):
     plt.suptitle("r/place Colour ({}/10411)".format(image_n), fontsize=14)
     plt.tight_layout()
     # recommend playing with the DPI/plot size. 10k images can get large!
-    plt.savefig('/Graph_Ims/{}_mpl.png'.format(basename), dpi=250)
+    plt.savefig('./Graph_Ims/{}_mpl.png'.format(basename), dpi=250)
     #plt.show()
     del basename, rowdata, image_n, hexnames, color_data
     
     
-images = sorted(glob.glob('/Ims/*.png'))
-create_lookup_dataframe(images, 'image_colour_data.csv')
+images = sorted(glob.glob('./Ims/*.png'))
+
+#create_lookup_dataframe(images, 'image_colour_data.csv')
 
 # parralel processing made the graph making MUCH QUICKER!
 num_cores = 4
-Parallel(n_jobs=num_cores)(delayed(CreateGraphic)(i) for i in images)
+Parallel(n_jobs=num_cores)(delayed(CreateGraphic)('image_colour_data.csv', i) for i in images)
 
 
